@@ -34,7 +34,7 @@ func InitGame(x *Game) {
 	x.FangXiang = 1 //顺时针
 	x.NowID = 0     //第一个人
 
-	colors := []string{"Red", "Yello", "Blue", "Green"}
+	colors := []string{"Red", "Yellow", "Blue", "Green"}
 	val := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "Skip", "Reverse", "+2"}
 	CardId := 1
 	//数字牌
@@ -75,4 +75,94 @@ func InitGame(x *Game) {
 	}
 	x.TopCard = x.MuoPai[FirstId]
 	x.MuoPai = append(x.MuoPai[:FirstId], x.MuoPai[FirstId+1:]...)
+}
+
+func CheckCard(x *Game, p *Player, cardID int) (bool, string) {
+	if x.Players[x.NowID].ID != p.ID {
+		return false, "没到你出牌，你慌dk"
+	}
+	var FindCard Card
+	IsFind := false
+	for _, c := range p.Cards {
+		if c.ID == cardID {
+			FindCard = c
+			IsFind = true
+			break
+		}
+	}
+	if !IsFind {
+		return false, "你没有这张牌！"
+	}
+	CanPlay := false
+	if FindCard.Color == "Black" ||
+		FindCard.Color == x.TopCard.Color ||
+		FindCard.Val == x.TopCard.Val {
+		CanPlay = true
+	}
+	if !CanPlay {
+		return false, "出的牌不合法"
+	}
+	return true, "OK"
+}
+
+func PlayAction(x *Game, p *Player, CardId int) {
+	n := len(x.Players)
+	//删牌
+	for i, c := range p.Cards {
+		if c.ID == CardId {
+			x.TopCard = c //现在桌面上的牌更新
+			x.DaDiaoDeCard = append(x.DaDiaoDeCard, c)
+			p.Cards = append(p.Cards[:i], p.Cards[i+1:]...)
+			break
+		}
+	}
+	//+4 +2 转向 转色
+	skip := false
+	draw := 0
+	switch x.TopCard.Val {
+	case "Reverse": //转向
+		x.FangXiang *= -1
+	case "Skip":
+		skip = true
+	case "+2":
+		draw = 2
+	case "+4":
+		draw = 4
+	}
+	//换人
+	x.NowID = (x.NowID + x.FangXiang + n) % n
+	if skip || draw > 0 {
+		if draw > 0 {
+			for i := 0; i < draw; i++ {
+				if len(x.MuoPai) > 0 {
+					x.Players[x.NowID].Cards = append(x.Players[x.NowID].Cards, x.MuoPai[0])
+					x.MuoPai = x.MuoPai[1:]
+				}
+			}
+		}
+		// 如果是 skip 或加牌，也要跳过该玩家的出牌回合
+		x.NowID = (x.NowID + x.FangXiang + n) % n
+	}
+}
+
+func DrawCard(x *Game, p *Player) {
+	if x.Players[x.NowID].ID != p.ID {
+		return
+	}
+	if len(x.MuoPai) == 0 {
+		// 如果摸牌堆空了，把打掉的牌洗回去
+		x.MuoPai = x.DaDiaoDeCard
+		x.DaDiaoDeCard = []Card{}
+		rand.Seed(time.Now().UnixNano())
+		rand.Shuffle(len(x.MuoPai), func(i, j int) {
+			x.MuoPai[i], x.MuoPai[j] = x.MuoPai[j], x.MuoPai[i]
+		})
+	}
+	if len(x.MuoPai) > 0 {
+		p.Cards = append(p.Cards, x.MuoPai[0])
+		x.MuoPai = x.MuoPai[1:]
+	}
+	// 摸牌后通常也要换人，或者允许出刚摸到的牌（这里简单处理为换人）
+	n := len(x.Players)
+	x.NowID = (x.NowID + x.FangXiang + n) % n
 }
