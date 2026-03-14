@@ -29,7 +29,7 @@ func (h *Hub) Run() {
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
-				// 通知 Uno.go 该玩家掉线
+				// 通知 Uno.go 该玩家掉线3
 			}
 
 		// 处理广播消息

@@ -1,26 +1,49 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 )
 
-func main() {
-	hub := NewHub()
-	go hub.Run()
+func randomRoomID() string {
+	const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+	b := make([]byte, 6)
+	for i := range b {
+		b[i] = alphabet[rand.Intn(len(alphabet))]
+	}
+	return string(b)
+}
 
-	game := &Game{}
-	// 初始化几个玩家用于测试
-	game.Players = append(game.Players, &Player{ID: "p1", Name: "Player 1"})
-	game.Players = append(game.Players, &Player{ID: "p2", Name: "Player 2"})
-	InitGame(game)
+func main() {
+	rand.Seed(time.Now().UnixNano())
+	manager := NewRoomManager()
+	defaultRoom := manager.CreateRoom("ROOM01")
+	log.Printf("Default room created: %s", defaultRoom.ID)
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		serveWs(hub, game, w, r)
+		serveWs(manager, w, r)
+	})
+	http.HandleFunc("/api/rooms", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		roomID := randomRoomID()
+		for manager.GetRoom(roomID) != nil {
+			roomID = randomRoomID()
+		}
+		room := manager.CreateRoom(roomID)
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"roomId": room.ID})
 	})
 
-	log.Println("Server starting on :8080...")
-	err := http.ListenAndServe(":8080", nil)
+	http.Handle("/", http.FileServer(http.Dir("./frontend")))
+
+	log.Println("Server starting on :8800...")
+	err := http.ListenAndServe(":8800", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}

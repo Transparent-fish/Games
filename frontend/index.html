@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UNO Online</title>
+  <style>
+    :root {
+      --bg-0: #f7f3e8;
+      --bg-1: #e9dfc7;
+      --ink: #1d2430;
+      --muted: #5d6878;
+      --card: #ffffff;
+      --brand: #be3e2b;
+      --ok: #1e7f43;
+      --danger: #b91c1c;
+      --border: #d5c9ac;
+      --shadow: 0 18px 45px rgba(29, 36, 48, 0.15);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 500px at 110% -10%, #f4dca1 0%, transparent 70%),
+        radial-gradient(1000px 450px at -10% 110%, #c7e5cf 0%, transparent 70%),
+        linear-gradient(150deg, var(--bg-0), var(--bg-1));
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .app {
+      width: min(1100px, 100%);
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.45));
+    }
+
+    .title {
+      font-size: 24px;
+      letter-spacing: 0.5px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    input, select, button {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink);
+      padding: 9px 11px;
+      font-size: 14px;
+    }
+
+    select, button {
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--brand);
+      color: #fff;
+      border-color: transparent;
+      font-weight: 600;
+    }
+
+    button[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 20px;
+      margin: 0;
+    }
+
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--danger); }
+
+    .main {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .players {
+      display: grid;
+      gap: 8px;
+    }
+
+    .player {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      background: #fffdfa;
+    }
+
+    .player.now {
+      outline: 2px solid #f1ab2c;
+      background: #fff6dd;
+    }
+
+    .table-card {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .table-top-card {
+      cursor: default;
+      width: min(170px, 100%);
+      height: 170px;
+    }
+
+    .table-top-card:hover {
+      transform: none;
+    }
+
+    .hand-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .hand {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+    }
+
+    .uno-card {
+      border: 2px solid #1d2430;
+      border-radius: 12px;
+      height: 138px;
+      color: #fff;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      position: relative;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+      box-shadow: 0 8px 16px rgba(29, 36, 48, 0.15);
+      user-select: none;
+    }
+
+    .uno-card:hover { transform: translateY(-2px); }
+    .uno-card.selected {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(29, 36, 48, 0.25);
+      outline: 3px solid #f1ab2c;
+    }
+
+    .uno-card small {
+      position: absolute;
+      left: 8px;
+      top: 6px;
+      font-size: 12px;
+      opacity: 0.95;
+    }
+
+    .c-Red { background: linear-gradient(150deg, #cb2f2f, #8f1c1c); }
+    .c-Yellow { background: linear-gradient(150deg, #f4bf3d, #cb8d1d); color: #2a2415; text-shadow: none; }
+    .c-Blue { background: linear-gradient(150deg, #1e6bc5, #154483); }
+    .c-Green { background: linear-gradient(150deg, #31a552, #1f6e36); }
+    .c-Black { background: linear-gradient(150deg, #2b2b2b, #090909); }
+
+    @media (max-width: 900px) {
+      .main { grid-template-columns: 1fr; }
+      .uno-card { height: 120px; }
+      .table-top-card { height: 140px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <h1 class="title">UNO Online</h1>
+      <div class="controls">
+        <input id="roomId" type="text" placeholder="房间号(默认 ROOM01)" value="ROOM01" />
+        <button id="createRoomBtn">开房</button>
+        <select id="playerId">
+          <option value="p1">玩家 p1</option>
+          <option value="p2">玩家 p2</option>
+        </select>
+        <button id="connectBtn" class="primary">连接</button>
+        <button id="drawBtn">摸牌</button>
+        <button id="playBtn">出选中牌</button>
+      </div>
+      <p id="status" class="status">未连接</p>
+    </div>
+
+    <div class="main">
+      <section class="panel">
+        <h2>对局信息</h2>
+        <div id="players" class="players"></div>
+        <div class="table-card" id="topCard"></div>
+      </section>
+
+      <section class="panel hand-wrap">
+        <h2>我的手牌</h2>
+        <div id="hand" class="hand"></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="./index.js"></script>
+</body>
+</html>

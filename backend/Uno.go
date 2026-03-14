@@ -33,6 +33,7 @@ func InitGame(x *Game) {
 	x.DaDiaoDeCard = []Card{}
 	x.FangXiang = 1 //顺时针
 	x.NowID = 0     //第一个人
+	x.TopCard = Card{}
 
 	colors := []string{"Red", "Yellow", "Blue", "Green"}
 	val := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "Skip", "Reverse", "+2"}
@@ -62,7 +63,7 @@ func InitGame(x *Game) {
 	})
 	//发牌
 	for _, p := range x.Players {
-		p.Cards = x.MuoPai[:7]
+		p.Cards = append([]Card(nil), x.MuoPai[:7]...)
 		x.MuoPai = x.MuoPai[7:]
 	}
 	//第一张牌去牌顶
@@ -79,7 +80,7 @@ func InitGame(x *Game) {
 
 func CheckCard(x *Game, p *Player, cardID int) (bool, string) {
 	if x.Players[x.NowID].ID != p.ID {
-		return false, "没到你出牌，你慌dk"
+		return false, "没到你出牌"
 	}
 	var FindCard Card
 	IsFind := false
@@ -150,8 +151,14 @@ func DrawCard(x *Game, p *Player) {
 		return
 	}
 	if len(x.MuoPai) == 0 {
-		// 如果摸牌堆空了，把打掉的牌洗回去
-		x.MuoPai = x.DaDiaoDeCard
+		// 如果摸牌堆空了，把弃牌堆（不含当前牌顶）洗回去
+		recycled := make([]Card, 0, len(x.DaDiaoDeCard))
+		for _, c := range x.DaDiaoDeCard {
+			if c.ID != x.TopCard.ID {
+				recycled = append(recycled, c)
+			}
+		}
+		x.MuoPai = recycled
 		x.DaDiaoDeCard = []Card{}
 		rand.Seed(time.Now().UnixNano())
 		rand.Shuffle(len(x.MuoPai), func(i, j int) {
