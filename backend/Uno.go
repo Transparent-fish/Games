@@ -95,7 +95,7 @@ func InitGame(g *Game) {
 		p.CardCount = len(p.Cards)
 	}
 
-	// 翻出第一张非黑牌作为牌顶
+	// 翻出第 1 张非黑牌作为牌顶
 	for i, c := range g.DrawPile {
 		if c.Color != "Black" {
 			g.TopCard = c
