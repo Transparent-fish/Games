@@ -1,20 +1,8 @@
-.idea/
-.vscode/
-*.swp
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-Thumbs.db
+# OSX
+#
 .DS_Store
 
-/UnoServer
-/bin/
-/out/
-go.work
-
-frontend/node_modules/
-frontend/.env*.local
-
-*.log
+# node.js
+#
+node_modules/
+npm-debug.log
